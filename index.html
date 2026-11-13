@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+<meta charset="UTF-8">
+<title>حدس کلمه فارسی</title>
+<style>
+body{
+    font-family: Tahoma, sans-serif;
+    background:#f5f5f5;
+    margin:0;
+    padding:20px;
+    direction:rtl;
+}
+.container{
+    max-width:600px;
+    margin:auto;
+    background:#fff;
+    padding:20px;
+    border-radius:10px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.1);
+}
+h1{
+    text-align:center;
+    color:#333;
+}
+#game{
+    margin-top:20px;
+}
+#word-display{
+    font-size:2rem;
+    letter-spacing:10px;
+    text-align:center;
+    margin-bottom:15px;
+}
+#word-display span{
+    display:inline-block;
+    width:30px;
+    text-align:center;
+    margin:0 2px;
+    border-bottom:2px solid #333;
+}
+#message{
+    text-align:center;
+    font-weight:bold;
+    margin-bottom:10px;
+    min-height:1.2em;
+}
+#guessed-letters{
+    text-align:center;
+    margin-bottom:10px;
+    color:#555;
+}
+#attempts-left{
+    text-align:center;
+    font-size:0.9rem;
+    color:#d9534f;
+}
+input#letter-input{
+    display:block;
+    margin:10px auto;
+    padding:8px;
+    font-size:1rem;
+    border:1px solid #ccc;
+    border-radius:5px;
+    text-align:center;
+    direction:ltr;
+}
+button{
+    display:block;
+    margin:10px auto;
+    padding:10px 20px;
+    font-size:1rem;
+    background:#5cb85c;
+    color:#fff;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+    transition:background 0.3s;
+}
+button:hover{
+    background:#4cae4c;
+}
+button#restart-btn{
+    background:#f0ad4e;
+}
+button#restart-btn:hover{
+    background:#ec971f;
+}
+@media (max-width:400px){
+    #word-display span{
+        width:20px;
+        font-size:1.5rem;
+    }
+}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>حدس کلمه فارسی</h1>
+<div id="game">
+<div id="word-display"></div>
+<div id="message"></div>
+<div id="guessed-letters"></div>
+<div id="attempts-left"></div>
+<input type="text" id="letter-input" maxlength="1" placeholder="یک حرف وارد کنید">
+<button id="guess-btn">حدس بزن</button>
+<button id="restart-btn" style="display:none;">شروع مجدد</button>
+</div>
+</div>
+<script>
+const words = [
+    "کتاب","مدرسه","دانشجو","خواب","غذا","پنجره","خورشید","ماه","رودخانه","گل"
+];
+let selectedWord = "";
+let guessedLetters = [];
+let wrongGuesses = [];
+const maxWrong = 6;
+let gameOver = false;
+function startGame(){
+    selectedWord = words[Math.floor(Math.random()*words.length)];
+    guessedLetters = [];
+    wrongGuesses = [];
+    gameOver = false;
+    document.getElementById("message").textContent = "";
+    renderWord();
+    document.getElementById("guessed-letters").textContent = "حروف حدس زده شده: ";
+    document.getElementById("attempts-left").textContent = `تلاش‌های باقیمانده: ${maxWrong}`;
+    document.getElementById("letter-input").disabled = false;
+    document.getElementById("letter-input").value = "";
+    document.getElementById("guess-btn").style.display = "block";
+    document.getparty = "";
+}
+function renderWord(){
+    const display = document.getElementById("word-display");
+    display.innerHTML = "";
+    for(const ch of selectedWord){
+        if(ch===" "){
+            display.appendChild(document.createElement("span"));
+        }else{
+            const span = document.createElement("span");
+            if(guessedLetters.includes(ch)){
+                span.textContent = ch;
+            }else{
+                span.textContent = "_";
+            }
+            display.appendChild(span);
+        }
+    }
+}
+function checkWin(){
+    for(const ch of selectedWord){
+        if(ch!==" " && !guessedLetters.includes(ch)){
+            return false;
+        }
+    }
+    return true;
+}
+function updateUI(){
+    renderWord();
+    if(checkWin()){
+        document.getElementById("message").textContent = "شما برنده شدید! کلمه: " + selectedWord;
+        endGame();
+    }else if(wrongGuesses.length===maxWrong){
+        document.getElementById("message").textContent = "شما باخته‌اید! کلمه: " + selectedWord;
+        endGame();
+    }
+}
+function endGame(){
+    gameOver = true;
+    document.getElementById("letter-input").disabled = true;
+    document.getElementById("guess-btn").style.display = "none";
+    document.getElementById("restart-btn").style.display = "block";
+}
+function guessLetter(){
+    const input = document.getElementById("letter-input");
+    let val = input.value.trim();
+    if(!val){
+        return;
+    }
+    const ch = val.charAt(0);
+    if(/[^آ-یءًٌٍَُِّْ ]/.test(ch) && ch!==" "){
+        document.getElementById("message").textContent = "لطفاً یک حرف فارسی وارد کنید.";
+        return;
+    }
+    if(guessedLetters.includes(ch) || wrongGuesses.includes(ch)){
+        return;
+    }
+    if(selectedWord.includes(ch)){
+        guessedLetters.push(ch);
+        updateUI();
+    }else{
+        wrongGuesses.push(ch);
+        document.getElementById("guessed-letters").textContent = "حروف حدس زده شده: " + guessedLetters.join(" ");
+        document.getElementById("attempts-left").textContent = `تلاش‌های باقیمانده: ${maxWrong - wrongGuesses.length}`;
+        updateUI();
+    }
+    input.value = "";
+}
+document.getElementById("guess-btn").addEventListener("click",guessLetter);
+document.getElementById("letter-input").addEventListener("keypress",function(e){
+    if(e.key==="Enter"){
+        guessLetter();
+    }
+});
+document.getElementById("restart-btn").addEventListener("click",function(){
+    startGame();
+});
+startGame();
+</script>
+</body>
+</html>
